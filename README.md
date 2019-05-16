@@ -3,13 +3,14 @@ RIver Profiler System, to be installed July 2019 in Inglefield Land, Greenland (
 
 ## Network
 
-The network is operating on the `192.168.0.XXX` space, with network mask of `255.255.255.0`.
+The network is operating on the 192.168.1.XXX space, with network mask of 255.255.255.0.
 The network is run through the powered ethernet switch, which is on digital IO 5.
+A good IP address for a computer attaching to the network is 192.168.1.42.
 
 ## Data logger
 
 The Sutron 9210 XLite is set up with station name `rips`.
-The logger IP address is `192.168.0.80`.
+The logger IP address is 192.168.1.80.
 
 ### Analog module
 
