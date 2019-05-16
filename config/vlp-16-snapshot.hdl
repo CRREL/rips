@@ -30,7 +30,7 @@
             "bot":"release/3.0.40#1",
             "top":"release/3.0.40#1"
         },
-        "rt":"83"
+        "rt":"88"
     },
     "status":{
         "gps":{
@@ -39,7 +39,7 @@
         },
         "motor":{
             "state":"On",
-            "rpm":604,
+            "rpm":603,
             "lock":"Off",
             "phase":23750
         },
@@ -50,29 +50,29 @@
     "diag":{
         "volt_temp":{
             "bot":{
-                "i_out":2102,
-                "pwr_1_2v":987,
-                "lm20_temp":1272,
-                "pwr_5v":2053,
-                "pwr_2_5v":2048,
+                "i_out":2106,
+                "pwr_1_2v":981,
+                "lm20_temp":1237,
+                "pwr_5v":2050,
+                "pwr_2_5v":2050,
                 "pwr_3_3v":2702,
-                "pwr_v_in":891,
+                "pwr_v_in":791,
                 "pwr_1_25v":0
             },
             "top":{
-                "hv":2883,
-                "ad_temp":630,
-                "lm20_temp":1254,
-                "pwr_5v":2058,
+                "hv":2841,
+                "ad_temp":627,
+                "lm20_temp":1221,
+                "pwr_5v":2057,
                 "pwr_2_5v":2047,
-                "pwr_3_3v":2657,
-                "pwr_5v_raw":2221,
+                "pwr_3_3v":2658,
+                "pwr_5v_raw":2223,
                 "pwr_vccint":975
             }
         },
-        "vhv":239,
+        "vhv":263,
         "adc_nf":[14],
-        "adc_stats":[{"mean":14.7,"stddev":0.5}],
+        "adc_stats":[{"mean":14.2,"stddev":0.469}],
         "ixe":1
     },
     "config":{
@@ -1059,11 +1059,11 @@
         ],
         "info":"VLP16 21873 MH1B VHV625 30400 A"
     },
-    "pkterr":48,
+    "pkterr":42,
     "gps":    {
         "nmea":{
             "data":"",
-            "age":"264382"
+            "age":"49329"
         },
         "stats":{
             "pps":{
