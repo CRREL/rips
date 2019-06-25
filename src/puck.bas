@@ -68,10 +68,10 @@ public sub puck_server(_socket, udp_buffer, _client_ip, _server_port, _client_po
   on error resume next
   lock puck_tmp_semaphore, LOCK_TIMEOUT
   bytes_written = writeb(outfile, udp_buffer, len(udp_buffer))
-  unlock puck_tmp_semaphore
   if err <> 0 then
     errormsg "[Puck] Puck temporary pcap file not open, dropping packet"
   end if
+  unlock puck_tmp_semaphore
 end sub
 
 webserver puck_server, PUCK_DATA_PORT, UDP
