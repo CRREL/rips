@@ -57,8 +57,13 @@ public sub sched_puck_measure
 
   infile = freefile
   open PUCK_TMP for input as infile
-  for packet_number = 1 to 2
-    statusmsg packet_number
+  for packet_number = 1 to num_packets
+    packet = ""
+    bytes_read = readb(infile, packet, PACKET_LENGTH)
+    if bytes_read <> PACKET_LENGTH then
+      errormsg "[Puck] Expected to read " + PACKET_LENGTH + " bytes, instead read " + bytes_read
+      exit sub
+    end if
   next
   close infile
   unlock puck_tmp_semaphore
