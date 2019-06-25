@@ -1,66 +1,77 @@
+const ANALOG_TERMINAL_STRIP = 1
+const DIGITAL_TERMINAL_STRIP = 1
+const MODEM_CHANNEL = 4
+const PUCK_CHANNEL = 5
+const CAMERA_CHANEL = 6
+const DIGITAL_ON = -1
+const DIGITAL_OFF = 0
+
 const PUCK_DATA_PORT = 2368
 const UDP = 1
 const PUCK_STARTUP_WAIT_TIME = 10.000
 const LAN_STARTUP_WAIT_TIME = 5.000
 const MEASURE_TIME = 20.000
-const PACKET_SIZE = 1206
+const PUCK_TMP = "puck.tmp"
+const PACKET_LENGTH = 1206
+const LOCK_TIMEOUT = 60
 
-public declare sub puck_server(socker, udp_buffer, client_ip, server_port, client_port)
-declare sub puck_handle_packets(packets)
-declare sub puck_handle_packet(packet)
+public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
 
-static packets_read = 0
+static puck_tmp_semaphore
 static outfile = 0
 
 public sub sched_puck_measure
-  statusmsg "Powering on the puck and ethernet switch"
-  call set_puck_power(1, 1)
+  packets_read = 0
+  on error resume next
+  kill PUCK_TMP
+  on error goto 0
+  lock puck_tmp_semaphore, LOCK_TIMEOUT
+  outfile = freefile
+  open PUCK_TMP for output as outfile
+  unlock puck_tmp_semaphore
+
+  statusmsg "[Puck] Powering on the puck and ethernet switch"
+  digital DIGITAL_TERMINAL_STRIP, PUCK_CHANNEL, DIGITAL_ON
   sleep PUCK_STARTUP_WAIT_TIME
-  statusmsg "Turning on the LAN"
+  
+  statusmsg "[Puck] Turning on the LAN"
   turn "LAN", "ON"
   sleep LAN_STARTUP_WAIT_TIME
-  packets_read = 0
-  outfile = freefile
-  open "puck.pcap" for output as outfile
   sleep MEASURE_TIME
-  statusmsg "Turning off the LAN"
+  statusmsg "[Puck] Turning off the LAN" 
   turn "LAN", "OFF"
-  statusmsg "Powering off the puck and ethernet switch"
-  call set_puck_power(1, 0)
-  statusmsg "Read " + packets_read + " packets"
+  statusmsg "[Puck] Powering off the puck and ethernet switch"
+  digital DIGITAL_TERMINAL_STRIP, PUCK_CHANNEL, DIGITAL_OFF
+
+  lock puck_tmp_semaphore, LOCK_TIMEOUT
   close outfile
 
+  bytes = filelen(PUCK_TMP)
+  if bytes mod PACKET_LENGTH <> 0 then
+    errormsg "[Puck] Invalid length of temporary packet file"
+    exit sub
+  else
+    num_packets = int(bytes / PACKET_LENGTH)
+    statusmsg "[Puck] Read " + num_packets + " packets"
+  end if
+
   infile = freefile
-  open "puck.pcap" for input as infile
-  packets = ""
-  bytes_read = readb(infile, packets, filelen(infile))
+  open PUCK_TMP for input as infile
+  for packet_number = 1 to 2
+    statusmsg packet_number
+  next
   close infile
-
-  call puck_handle_packets(packets)
+  unlock puck_tmp_semaphore
 end sub
 
-public sub puck_handle_udp_packet(_socket, udp_buffer, _client_ip, _server_port, _client_port)
-  packets_read = packets_read + 1
+public sub puck_server(_socket, udp_buffer, _client_ip, _server_port, _client_port)
+  on error resume next
+  lock puck_tmp_semaphore, LOCK_TIMEOUT
   bytes_written = writeb(outfile, udp_buffer, len(udp_buffer))
-end sub
-
-sub puck_handle_packets(packets)
-  for start = 0 to len(packets) step PACKET_SIZE
-    packet = mid(packets, start, PACKET_SIZE)
-    call puck_handle_packet(packet)
-  next start
-end sub
-
-sub puck_handle_packet(packet)
-  for index = 0 to 11
-    azimuths(index * 2) = puck_data_block_azimuth(packet, index)
-  next index
-  for index = 1 to 23 step 2
-    azimuths(index) = puck_interpolate_azimuth(azimuths, index)
-  next index
-  for index = 0 to 11
-    call puck_handle_data_block(packet, index, azimuths(index * 2), azimuths(index * 2 + 1))
-  next index
+  unlock puck_tmp_semaphore
+  if err <> 0 then
+    errormsg "[Puck] Puck temporary pcap file not open, dropping packet"
+  end if
 end sub
 
 webserver puck_server, PUCK_DATA_PORT, UDP
