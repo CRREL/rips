@@ -2,7 +2,7 @@
 ' The program will capture a single .JPG image ' and save it out to \Flash Disk\ directory
 
 '************* User-defined constants ********************
-Static StarDotIPAddress1 = "192.168.50.130:80" ' StarDot1
+Static StarDotIPAddress1 = "192.168.1.81:80" ' StarDot1
 Static StarDotIPAddress2 = "192.168.50.132:80" ' StarDot2
 Static LocalStarDotImageFile1 = "\Flash Disk\stardot1.jpg"
 Static LocalStarDotImageFile2 = "\Flash Disk\stardot2.jpg"

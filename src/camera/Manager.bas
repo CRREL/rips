@@ -1436,4 +1436,3 @@ End Sub
 If SIMULATE Then
    ErrorMsg "Manager.bas is running with simulation enabled. This should not be used on a field unit."
 End If
-
