@@ -1130,7 +1130,7 @@ Public Sub Sched_Manager
    End If
 
    ' Archive the StarDot #2 picture to the SD Card
-   If GotStarDotPicture1 Then
+   If GotStarDotPicture2 Then
       Call ArchiveImage("StarDot2", LocalStarDotImageFile2, ArchiveStarDotPath2)
    End If
 
