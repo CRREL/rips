@@ -392,7 +392,7 @@ Const ServerFtpPassword = "ExecuteTransportBroadBeach"
 
 ' A3LA Settings
 Const ModemPort = "COM2:"
-Const ModemDIGIO = 5
+Const ModemDIGIO = 4
 Const ModemWarmupDelay = 60.0  ' Warmup Modem for 1 minute (60 sec) before trying to connect
 
 ' Archive Settings
