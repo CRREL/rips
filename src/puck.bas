@@ -193,7 +193,7 @@ sub puck_write_point(outfile, azimuth, elevation, range, reflectivity)
   x = range * cos(elevation) * sin(azimuth)
   y = range * cos(elevation) * cos(azimuth)
   z = range * sin(elevation)
-  print outfile, format("%.3f,%.3f,%.3f,%d", z, y, -x, reflectivity)
+  print outfile, format("%.3f,%.3f,%.3f,%d", z, y, -x, reflectivity) ' this corresponds to a 90 degree cw rotation around the y axis
 end sub
 
 public sub puck_server(_socket, udp_buffer, _client_ip, _server_port, _client_port)
