@@ -19,6 +19,7 @@ const NUM_DATA_BLOCKS = 12
 const NUM_CHANNELS = 16
 const ELEVATION_ANGLES = array(-15, 1, -13, -3, -11, 5, -9, 7, -7, 9, -5, 11, -3, 13, -1, 15) ' from puck documentation
 const BE_MKDIR_FAILED = 3 ' from sutron basic documentation
+const PI = 3.141592654
 
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
 declare sub puck_take_measurement
@@ -26,6 +27,7 @@ declare sub puck_convert_measurement
 declare function puck_interpolate_azimuth(azimuths, data_block_number)
 declare function puck_extrapolate_last_azimuth(azimuths)
 declare function puck_elevation_angle(channel)
+declare sub puck_write_point(outfile, azimuth, elevation, range, relfectivity)
 
 static puck_tmp_semaphore
 static outfile = 0
@@ -44,6 +46,10 @@ function debug(data)
     s = s + hex(u8(mid(data, i, 1))) + " "
   next
   debug = s
+end function
+
+function deg2rad(degrees)
+  deg2rad = degrees * PI / 180.0
 end function
 
 public sub sched_puck_measure
@@ -123,17 +129,16 @@ sub puck_convert_measurement
     for data_block_number = 0 to NUM_DATA_BLOCKS - 1
       offset = data_block_number * DATA_BLOCK_LENGTH + 5
       for channel = 0 to NUM_CHANNELS - 1
+        azimuth = azimuths(data_block_number * 2)
         elevation = puck_elevation_angle(channel)
         range = bitconvert(mid(packet, offset + channel * 3, 2) + chr(0) + chr(0), 1) * 0.002
         reflectivity = bitconvert(mid(packet, offset + channel * 3 + 2, 1) + chr(0) + chr(0) + chr(0), 1)
-        if range > 0 then
-          print outfile, format("%.3f,%d,%.3f,%d", azimuths(data_block_number * 2), elevation, range, reflectivity)
-        end if
+        call puck_write_point(outfile, azimuth, elevation, range, reflectivity)
+
+        azimuth = azimuths(data_block_number * 2 + 1)
         range = bitconvert(mid(packet, offset + 3 * NUM_CHANNELS + channel * 3, 2) + chr(0) + chr(0), 1) * 0.002
         reflectivity = bitconvert(mid(packet, offset + 3 * NUM_CHANNELS + channel * 3 + 2, 1) + chr(0) + chr(0) + chr(0), 1)
-        if range > 0 then
-          print outfile, format("%.3f,%d,%.3f,%d", azimuths(data_block_number * 2 + 1), elevation, range, reflectivity)
-        end if
+        call puck_write_point(outfile, azimuth, elevation, range, reflectivity)
       next
     next
   next
@@ -177,6 +182,18 @@ end function
 function puck_elevation_angle(channel)
   puck_elevation_angle = ELEVATION_ANGLES(channel)
 end function
+
+sub puck_write_point(outfile, azimuth, elevation, range, reflectivity)
+  if range = 0 then
+    exit sub
+  end if
+  azimuth = deg2rad(azimuth)
+  elevation = deg2rad(elevation)
+  x = range * cos(elevation) * sin(azimuth)
+  y = range * cos(elevation) * cos(azimuth)
+  z = range * sin(elevation)
+  print outfile, format("%.3f,%.3f,%.3f,%d", x, y, z, reflectivity)
+end sub
 
 public sub puck_server(_socket, udp_buffer, _client_ip, _server_port, _client_port)
   on error resume next
