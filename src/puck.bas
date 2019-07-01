@@ -16,6 +16,7 @@ const PACKET_LENGTH = 1206
 const LOCK_TIMEOUT = 60
 const DATA_BLOCK_LENGTH = 100
 const NUM_DATA_BLOCKS = 12
+const NUM_CHANNELS = 16
 
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
 declare sub puck_take_measurement
@@ -94,8 +95,9 @@ sub puck_convert_measurement
       exit sub
     end if
 
-    for data_block_number = 1 to NUM_DATA_BLOCKS
-      data_block = mid(packet, DATA_BLOCK_LENGTH * (data_block_number - 1) + 1, DATA_BLOCK_LENGTH)
+    data = array(0)
+    for data_block_number = 0 to NUM_DATA_BLOCKS - 1
+      data_block = mid(packet, DATA_BLOCK_LENGTH * data_block_number + 1, DATA_BLOCK_LENGTH)
       flag = left(data_block, 2)
       if flag <> chr(&hff) + chr(&hee) then
         errormsg "[PUCK] Invalid flag: " + debug(flag)
@@ -103,6 +105,11 @@ sub puck_convert_measurement
       end if
 
       azimuth = bitconvert(mid(data_block, 3, 2) + chr(0) + chr(0), 1) / 100
+      data(data_block_number * 2, 0) = azimuth
+      for channel = 0 to NUM_CHANNELS
+        data(data_block_number * 2, channel + 1) = mid(data_block, 5 + 3 * channel, 3)
+        data(data_block_number * 2 + 1, channel + 1) = mid(data_block, 5 + NUM_CHANNELS * 3 + 3 * channel, 3)
+      next 
     next
   next
   close infile
