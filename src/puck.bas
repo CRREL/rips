@@ -142,6 +142,7 @@ sub puck_convert_measurement
       next
     next
   next
+  statusmsg "[Puck] Packet conversion complete"
   close outfile
   close infile
   goto cleanup
@@ -192,21 +193,33 @@ sub puck_write_point(outfile, azimuth, elevation, range, reflectivity)
   x = range * cos(elevation) * sin(azimuth)
   y = range * cos(elevation) * cos(azimuth)
   z = range * sin(elevation)
-  print outfile, format("%.3f,%.3f,%.3f,%d", x, y, z, reflectivity)
+  print outfile, format("%.3f,%.3f,%.3f,%d", z, y, -x, reflectivity)
 end sub
 
 public sub puck_server(_socket, udp_buffer, _client_ip, _server_port, _client_port)
   on error resume next
   lock puck_tmp_semaphore, LOCK_TIMEOUT
   bytes_written = writeb(outfile, udp_buffer, len(udp_buffer))
-  if err <> 0 then
-    statusmsg "[Puck] Puck temporary pcap file not open, dropping packet"
-  end if
   unlock puck_tmp_semaphore
 end sub
 
-webserver puck_server, PUCK_DATA_PORT, UDP
+declare tag Puck(3)
+public function get_puck(value)
+   if value = 1 or value = 3 then
+      if digital(DIGITAL_TERMINAL_STRIP, PUCK_CHANNEL) then
+         get_puck = 1
+      else
+         get_puck = 0
+      end if
+   else
+      get_puck = 0
+   end if
+end function
 
-public sub start_recording
-  call puck_convert_measurement
+public sub set_puck(value, data)
+   If value = 1 Or value = 3 Then
+      digital DIGITAL_TERMINAL_STRIP, PUCK_CHANNEL, data
+   end if
 end sub
+
+webserver puck_server, PUCK_DATA_PORT, UDP
