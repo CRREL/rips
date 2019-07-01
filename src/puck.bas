@@ -21,6 +21,8 @@ const NUM_CHANNELS = 16
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
 declare sub puck_take_measurement
 declare sub puck_convert_measurement
+declare function puck_interpolate_azimuth(azimuths, data_block_number)
+declare function puck_extrapolate_last_azimuth(azimuths)
 
 static puck_tmp_semaphore
 static outfile = 0
@@ -108,27 +110,9 @@ sub puck_convert_measurement
       azimuths(data_block_number * 2) = azimuth
     next
     for data_block_number = 0 to NUM_DATA_BLOCKS - 2
-      before = azimuths(data_block_number * 2)
-      after = azimuths(data_block_number * 2 + 2)
-      if after < before then
-        after = after + 360
-      end if
-      azimuth = before + (after - before) / 2
-      if azimuth > 360 then
-        azimuth = azimuth - 360
-      end if
-      azimuths(data_block_number * 2 + 1) = azimuth
+      azimuths(data_block_number * 2 + 1) = puck_interpolate_azimuth(azimuths, data_block_number)
     next
-    two_before = azimuths(NUM_DATA_BLOCKS * 2 - 3)
-    one_before = azimuths(NUM_DATA_BLOCKS * 2 - 2)
-    if one_before < two_before then
-      one_before = one_before + 360
-    end if
-    azimuth = one_before + (one_before - two_before)
-    if azimuth > 360 then
-      azimuth = azimuth - 360
-    end if
-    azimuths(NUM_DATA_BLOCKS * 2 - 1) = azimuth
+    azimuths(NUM_DATA_BLOCKS * 2 - 1) = puck_extrapolate_last_azimuth(azimuths)
 
     message = "azimuths (" + ubound(azimuths) + "): "
     for index = 0 to ubound(azimuths) - 1
@@ -140,6 +124,32 @@ sub puck_convert_measurement
 
   unlock puck_tmp_semaphore
 end sub
+
+function puck_interpolate_azimuth(azimuths, data_block_number)
+  before = azimuths(data_block_number * 2)
+  after = azimuths(data_block_number * 2 + 2)
+  if after < before then
+    after = after + 360
+  end if
+  azimuth = before + (after - before) / 2
+  if azimuth > 360 then
+    azimuth = azimuth - 360
+  end if
+  puck_interpolate_azimuth = azimuth
+end function
+
+function puck_extrapolate_last_azimuth(azimuths)
+  two_before = azimuths(NUM_DATA_BLOCKS * 2 - 3)
+  one_before = azimuths(NUM_DATA_BLOCKS * 2 - 2)
+  if one_before < two_before then
+    one_before = one_before + 360
+  end if
+  azimuth = one_before + (one_before - two_before)
+  if azimuth > 360 then
+    azimuth = azimuth - 360
+  end if
+  puck_extrapolate_last_azimuth = azimuth
+end function
 
 public sub puck_server(_socket, udp_buffer, _client_ip, _server_port, _client_port)
   on error resume next
