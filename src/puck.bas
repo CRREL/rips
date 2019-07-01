@@ -95,7 +95,7 @@ sub puck_convert_measurement
       exit sub
     end if
 
-    data = array(0)
+    azimuths = array(0)
     for data_block_number = 0 to NUM_DATA_BLOCKS - 1
       data_block = mid(packet, DATA_BLOCK_LENGTH * data_block_number + 1, DATA_BLOCK_LENGTH)
       flag = left(data_block, 2)
@@ -105,12 +105,36 @@ sub puck_convert_measurement
       end if
 
       azimuth = bitconvert(mid(data_block, 3, 2) + chr(0) + chr(0), 1) / 100
-      data(data_block_number * 2, 0) = azimuth
-      for channel = 0 to NUM_CHANNELS
-        data(data_block_number * 2, channel + 1) = mid(data_block, 5 + 3 * channel, 3)
-        data(data_block_number * 2 + 1, channel + 1) = mid(data_block, 5 + NUM_CHANNELS * 3 + 3 * channel, 3)
-      next 
+      azimuths(data_block_number * 2) = azimuth
     next
+    for data_block_number = 0 to NUM_DATA_BLOCKS - 2
+      before = azimuths(data_block_number * 2)
+      after = azimuths(data_block_number * 2 + 2)
+      if after < before then
+        after = after + 360
+      end if
+      azimuth = before + (after - before) / 2
+      if azimuth > 360 then
+        azimuth = azimuth - 360
+      end if
+      azimuths(data_block_number * 2 + 1) = azimuth
+    next
+    two_before = azimuths(NUM_DATA_BLOCKS * 2 - 3)
+    one_before = azimuths(NUM_DATA_BLOCKS * 2 - 2)
+    if one_before < two_before then
+      one_before = one_before + 360
+    end if
+    azimuth = one_before + (one_before - two_before)
+    if azimuth > 360 then
+      azimuth = azimuth - 360
+    end if
+    azimuths(NUM_DATA_BLOCKS * 2 - 1) = azimuth
+
+    message = "azimuths (" + ubound(azimuths) + "): "
+    for index = 0 to ubound(azimuths) - 1
+      message = message + azimuths(index) + ", "
+    next
+    statusmsg message
   next
   close infile
 
