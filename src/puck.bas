@@ -17,12 +17,15 @@ const LOCK_TIMEOUT = 60
 const DATA_BLOCK_LENGTH = 100
 const NUM_DATA_BLOCKS = 12
 const NUM_CHANNELS = 16
+const ELEVATION_ANGLES = array(-15, 1, -13, -3, -11, 5, -9, 7, -7, 9, -5, 11, -3, 13, -1, 15) ' from puck documentation
+const BE_MKDIR_FAILED = 3 ' from sutron basic documentation
 
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
 declare sub puck_take_measurement
 declare sub puck_convert_measurement
 declare function puck_interpolate_azimuth(azimuths, data_block_number)
 declare function puck_extrapolate_last_azimuth(azimuths)
+declare function puck_elevation_angle(channel)
 
 static puck_tmp_semaphore
 static outfile = 0
@@ -76,6 +79,7 @@ sub puck_take_measurement
 end sub
 
 sub puck_convert_measurement
+  on error goto cleanup
   lock puck_tmp_semaphore, LOCK_TIMEOUT
 
   bytes = filelen(PUCK_TMP)
@@ -89,6 +93,8 @@ sub puck_convert_measurement
 
   infile = freefile
   open PUCK_TMP for input as infile
+  outfile = freefile
+  open "puck.csv" for output as outfile
   for packet_number = 1 to num_packets
     packet = ""
     bytes_read = readb(infile, packet, PACKET_LENGTH)
@@ -114,14 +120,31 @@ sub puck_convert_measurement
     next
     azimuths(NUM_DATA_BLOCKS * 2 - 1) = puck_extrapolate_last_azimuth(azimuths)
 
-    message = "azimuths (" + ubound(azimuths) + "): "
-    for index = 0 to ubound(azimuths) - 1
-      message = message + azimuths(index) + ", "
+    for data_block_number = 0 to NUM_DATA_BLOCKS - 1
+      offset = data_block_number * DATA_BLOCK_LENGTH + 5
+      for channel = 0 to NUM_CHANNELS - 1
+        elevation = puck_elevation_angle(channel)
+        range = bitconvert(mid(packet, offset + channel * 3, 2) + chr(0) + chr(0), 1) * 0.002
+        reflectivity = bitconvert(mid(packet, offset + channel * 3 + 2, 1) + chr(0) + chr(0) + chr(0), 1)
+        if range > 0 then
+          print outfile, format("%.3f,%d,%.3f,%d", azimuths(data_block_number * 2), elevation, range, reflectivity)
+        end if
+        range = bitconvert(mid(packet, offset + 3 * NUM_CHANNELS + channel * 3, 2) + chr(0) + chr(0), 1) * 0.002
+        reflectivity = bitconvert(mid(packet, offset + 3 * NUM_CHANNELS + channel * 3 + 2, 1) + chr(0) + chr(0) + chr(0), 1)
+        if range > 0 then
+          print outfile, format("%.3f,%d,%.3f,%d", azimuths(data_block_number * 2 + 1), elevation, range, reflectivity)
+        end if
+      next
     next
-    statusmsg message
   next
+  close outfile
   close infile
+  goto cleanup
 
+cleanup:
+  if err <> 0 then
+    errormsg "[Puck] Cleaning up after error: " + error
+  end if
   unlock puck_tmp_semaphore
 end sub
 
@@ -149,6 +172,10 @@ function puck_extrapolate_last_azimuth(azimuths)
     azimuth = azimuth - 360
   end if
   puck_extrapolate_last_azimuth = azimuth
+end function
+
+function puck_elevation_angle(channel)
+  puck_elevation_angle = ELEVATION_ANGLES(channel)
 end function
 
 public sub puck_server(_socket, udp_buffer, _client_ip, _server_port, _client_port)
