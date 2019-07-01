@@ -20,6 +20,7 @@ const NUM_CHANNELS = 16
 const ELEVATION_ANGLES = array(-15, 1, -13, -3, -11, 5, -9, 7, -7, 9, -5, 11, -3, 13, -1, 15) ' from puck documentation
 const BE_MKDIR_FAILED = 3 ' from sutron basic documentation
 const PI = 3.141592654
+const PUCK_BINARY = 1
 
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
 declare sub puck_take_measurement
@@ -100,7 +101,12 @@ sub puck_convert_measurement
   infile = freefile
   open PUCK_TMP for input as infile
   outfile = freefile
-  open "puck.csv" for output as outfile
+  if PUCK_BINARY then
+    filename = "puck.bin"
+  else
+    filename = "puck.csv"
+  end if
+  open filename for output as outfile
   for packet_number = 1 to num_packets
     packet = ""
     bytes_read = readb(infile, packet, PACKET_LENGTH)
@@ -193,7 +199,11 @@ sub puck_write_point(outfile, azimuth, elevation, range, reflectivity)
   x = range * cos(elevation) * sin(azimuth)
   y = range * cos(elevation) * cos(azimuth)
   z = range * sin(elevation)
-  print outfile, format("%.3f,%.3f,%.3f,%d", z, y, -x, reflectivity) ' this corresponds to a 90 degree cw rotation around the y axis
+  if PUCK_BINARY then
+    _ = writeb(outfile, bin(z, -4) + bin(y, -4) + bin(-x, -4) + bin(reflectivity, 1), 13)
+  else
+    print outfile, format("%.3f,%.3f,%.3f,%d", z, y, -x, reflectivity) ' this corresponds to a 90 degree cw rotation around the y axis
+  end if
 end sub
 
 public sub puck_server(_socket, udp_buffer, _client_ip, _server_port, _client_port)
