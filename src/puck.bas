@@ -20,7 +20,8 @@ const NUM_CHANNELS = 16
 const ELEVATION_ANGLES = array(-15, 1, -13, -3, -11, 5, -9, 7, -7, 9, -5, 11, -3, 13, -1, 15) ' from puck documentation
 const BE_MKDIR_FAILED = 3 ' from sutron basic documentation
 const PI = 3.141592654
-const PUCK_BINARY = 1
+const PUCK_BINARY = 0
+const PUCK_ARCHIVE_FOLDER = "\SD Card\puck"
 
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
 declare sub puck_take_measurement
@@ -29,6 +30,9 @@ declare function puck_interpolate_azimuth(azimuths, data_block_number)
 declare function puck_extrapolate_last_azimuth(azimuths)
 declare function puck_elevation_angle(channel)
 declare sub puck_write_point(outfile, azimuth, elevation, range, relfectivity)
+declare function puck_converted_filename
+declare sub puck_archive_converted_data
+declare function puck_suffix
 
 static puck_tmp_semaphore
 static outfile = 0
@@ -56,6 +60,7 @@ end function
 public sub sched_puck_measure
   call puck_take_measurement
   call puck_convert_measurement
+  call puck_archive_converted_data
 end sub
 
 sub puck_take_measurement
@@ -101,11 +106,7 @@ sub puck_convert_measurement
   infile = freefile
   open PUCK_TMP for input as infile
   outfile = freefile
-  if PUCK_BINARY then
-    filename = "puck.bin"
-  else
-    filename = "puck.csv"
-  end if
+  filename = puck_converted_filename
   open filename for output as outfile
   for packet_number = 1 to num_packets
     packet = ""
@@ -160,6 +161,17 @@ cleanup:
   unlock puck_tmp_semaphore
 end sub
 
+sub puck_archive_converted_data
+  on error goto 0
+  source = puck_converted_filename
+  datetime = now
+  destination = PUCK_ARCHIVE_FOLDER + "\" + format("%04d%02d%02d_%02d%02d%02d",
+    year(datetime), month(datetime), day(datetime), hour(datetime), minute(datetime), second(datetime)) +
+    "." + puck_suffix
+  statusmsg "[Puck] Archiving to " + destination
+  filecopy source, destination
+end sub
+
 function puck_interpolate_azimuth(azimuths, data_block_number)
   before = azimuths(data_block_number * 2)
   after = azimuths(data_block_number * 2 + 2)
@@ -199,12 +211,27 @@ sub puck_write_point(outfile, azimuth, elevation, range, reflectivity)
   x = range * cos(elevation) * sin(azimuth)
   y = range * cos(elevation) * cos(azimuth)
   z = range * sin(elevation)
+  if y < 0 then
+    exit sub
+  end if
   if PUCK_BINARY then
     _ = writeb(outfile, bin(z, -4) + bin(y, -4) + bin(-x, -4) + bin(reflectivity, 1), 13)
   else
     print outfile, format("%.3f,%.3f,%.3f,%d", z, y, -x, reflectivity) ' this corresponds to a 90 degree cw rotation around the y axis
   end if
 end sub
+
+function puck_converted_filename
+  puck_converted_filename = "puck." + puck_suffix
+end function
+
+function puck_suffix
+  if PUCK_BINARY then
+    puck_suffix = "bin"
+  else
+    puck_suffix = "csv"
+  end if
+end function
 
 public sub puck_server(_socket, udp_buffer, _client_ip, _server_port, _client_port)
   on error resume next
