@@ -1002,7 +1002,7 @@ Sub ArchiveImage(Camera, LocalStarDotImageFile, ArchiveStarDotPath)
    Call ArchiveFileName(DestFile)
 End Sub
 
-Sub TransferImage(Handle, Camera, LocalImageFile, ServerImagePath)
+Public Sub TransferImage(Handle, Camera, LocalImageFile, ServerImagePath)
    SentPicture = False
    D = GetScheduledTime
    ' <station name>_<camera>_<yyyy><mm><dd>_<hh><mm><ss>.jpg

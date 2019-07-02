@@ -21,8 +21,10 @@ const ELEVATION_ANGLES = array(-15, 1, -13, -3, -11, 5, -9, 7, -7, 9, -5, 11, -3
 const BE_MKDIR_FAILED = 3 ' from sutron basic documentation
 const PI = 3.141592654
 const PUCK_BINARY = 0
-const PUCK_ARCHIVE_FOLDER = "\SD Card\puck"
+const PUCK_ARCHIVE_FOLDER = "\SD Card\RIPS"
+const SERVER_PUCK_IMAGE_PATH = "/RIPS/"
 
+public declare sub transferimage(handle, camera, local, remote)
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
 declare sub puck_take_measurement
 declare sub puck_convert_measurement
@@ -33,6 +35,7 @@ declare sub puck_write_point(outfile, azimuth, elevation, range, relfectivity)
 declare function puck_converted_filename
 declare sub puck_archive_converted_data
 declare function puck_suffix
+declare sub puck_ftp_put
 
 static puck_tmp_semaphore
 static outfile = 0
@@ -61,6 +64,7 @@ public sub sched_puck_measure
   call puck_take_measurement
   call puck_convert_measurement
   call puck_archive_converted_data
+  call puck_ftp_put
 end sub
 
 sub puck_take_measurement
@@ -162,6 +166,8 @@ cleanup:
 end sub
 
 sub puck_archive_converted_data
+  on error resume next
+  mkdir PUCK_ARCHIVE_FOLDER
   on error goto 0
   source = puck_converted_filename
   datetime = now
@@ -170,6 +176,12 @@ sub puck_archive_converted_data
     "." + puck_suffix
   statusmsg "[Puck] Archiving to " + destination
   filecopy source, destination
+end sub
+
+sub puck_ftp_put
+  on error goto 0
+  handle = 0
+  call transferimage(handle, "puck", puck_converted_filename, SERVER_PUCK_IMAGE_PATH)
 end sub
 
 function puck_interpolate_azimuth(azimuths, data_block_number)
