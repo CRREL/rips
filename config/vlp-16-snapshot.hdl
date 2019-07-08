@@ -12,25 +12,25 @@
         },
         "sysid":{
             "bot":{"id":1212435459,"timestamp":1538413796},
-            "top":{"id":1145588752,"timestamp":1538413343}
+            "top":{"id":0,"timestamp":0}
         },
         "state":{
             "bot":{"factorymode":0,"powerup":0,"runconfig":0,"wdtimer":0,"nstatus":0,"crcerr":0,"nconfig":0,"appmode":1,"wden":1,"prevaddr":0,"appaddr":16777216,"wdto":118489096},
-            "top":{"factorymode":0,"powerup":0,"runconfig":0,"wdtimer":0,"nstatus":0,"crcerr":0,"nconfig":0,"appmode":1,"wden":1,"prevaddr":0,"appaddr":917504,"wdto":262144008}
+            "top":{"factorymode":0,"powerup":0,"runconfig":0,"wdtimer":0,"nstatus":0,"crcerr":0,"nconfig":0,"appmode":0,"wden":0,"prevaddr":0,"appaddr":0,"wdto":0}
         },
         "fpgaid":{
             "bot":{"id":2,"version":50341888,"timestamp":1538413333},
-            "top":{"id":1,"version":50341888,"timestamp":1538413333}
+            "top":{"id":0,"version":0,"timestamp":0}
         },
         "appid":{
             "bot":{"type":2,"version":50341888,"timestamp":1538414546},
-            "top":{"type":1,"version":50341888,"timestamp":1538413479}
+            "top":{"type":0,"version":0,"timestamp":0}
         },
         "build":{
             "bot":"release/3.0.40#1",
             "top":"release/3.0.40#1"
         },
-        "rt":"88"
+        "rt":"274"
     },
     "status":{
         "gps":{
@@ -39,7 +39,7 @@
         },
         "motor":{
             "state":"On",
-            "rpm":603,
+            "rpm":301,
             "lock":"Off",
             "phase":23750
         },
@@ -51,34 +51,34 @@
         "volt_temp":{
             "bot":{
                 "i_out":2106,
-                "pwr_1_2v":981,
-                "lm20_temp":1237,
-                "pwr_5v":2050,
+                "pwr_1_2v":984,
+                "lm20_temp":1354,
+                "pwr_5v":2057,
                 "pwr_2_5v":2050,
-                "pwr_3_3v":2702,
-                "pwr_v_in":791,
+                "pwr_3_3v":2704,
+                "pwr_v_in":857,
                 "pwr_1_25v":0
             },
             "top":{
-                "hv":2841,
-                "ad_temp":627,
-                "lm20_temp":1221,
-                "pwr_5v":2057,
+                "hv":2990,
+                "ad_temp":647,
+                "lm20_temp":1346,
+                "pwr_5v":2055,
                 "pwr_2_5v":2047,
                 "pwr_3_3v":2658,
-                "pwr_5v_raw":2223,
-                "pwr_vccint":975
+                "pwr_5v_raw":2198,
+                "pwr_vccint":974
             }
         },
-        "vhv":263,
+        "vhv":172,
         "adc_nf":[14],
-        "adc_stats":[{"mean":14.2,"stddev":0.469}],
+        "adc_stats":[{"mean":14.2,"stddev":0.406}],
         "ixe":1
     },
     "config":{
         "laser":"On",
         "returns":"Last",
-        "rpm":600,
+        "rpm":300,
         "fov":{
             "start":0,
             "end":359
@@ -1059,11 +1059,11 @@
         ],
         "info":"VLP16 21873 MH1B VHV625 30400 A"
     },
-    "pkterr":42,
+    "pkterr":0,
     "gps":    {
         "nmea":{
             "data":"",
-            "age":"49329"
+            "age":"19882"
         },
         "stats":{
             "pps":{
