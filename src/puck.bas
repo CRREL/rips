@@ -22,7 +22,8 @@ const BE_MKDIR_FAILED = 3 ' from sutron basic documentation
 const PI = 3.141592654
 const PUCK_BINARY = 0
 const PUCK_ARCHIVE_FOLDER = "\SD Card\RIPS"
-const SERVER_PUCK_IMAGE_PATH = "/RIPS/"
+const SERVER_PUCK_IMAGE_PATH = "/StarDot/INGLEFIELD_RIPS/RIPS/"
+const MIN_RANGE = 5
 
 public declare sub transferimage(handle, camera, local, remote)
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
@@ -31,7 +32,7 @@ declare sub puck_convert_measurement
 declare function puck_interpolate_azimuth(azimuths, data_block_number)
 declare function puck_extrapolate_last_azimuth(azimuths)
 declare function puck_elevation_angle(channel)
-declare sub puck_write_point(outfile, azimuth, elevation, range, relfectivity)
+declare sub puck_write_point(outfile, azimuth, elevation, range, relfectivity, channel)
 declare function puck_converted_filename
 declare sub puck_archive_converted_data
 declare function puck_suffix
@@ -182,7 +183,8 @@ end sub
 sub puck_ftp_put
   on error goto 0
   handle = 0
-  call transferimage(handle, "puck", puck_converted_filename, SERVER_PUCK_IMAGE_PATH)
+  source = "\Flash Disk\" + puck_converted_filename
+  call transferimage(handle, "puck", source, SERVER_PUCK_IMAGE_PATH)
 end sub
 
 function puck_interpolate_azimuth(azimuths, data_block_number)
@@ -216,7 +218,7 @@ function puck_elevation_angle(channel)
 end function
 
 sub puck_write_point(outfile, azimuth, elevation, range, reflectivity, channel)
-  if range = 0 then
+  if range = 0 or range < MIN_RANGE then
     exit sub
   end if
   azimuth = deg2rad(azimuth)
@@ -230,7 +232,7 @@ sub puck_write_point(outfile, azimuth, elevation, range, reflectivity, channel)
   if PUCK_BINARY then
     _ = writeb(outfile, bin(z, -4) + bin(y, -4) + bin(-x, -4) + bin(reflectivity, 1), 13)
   else
-    print outfile, format("%.3f,%.3f,%.3f,%d,%d,%.3f,%.3f,%.3f", z, y, -x, reflectivity, channel) ' this corresponds to a 90 degree cw rotation around the y axis
+    print outfile, format("%.3f,%.3f,%.3f,%d,%d,%.3f,%.3f,%.3f", z, y, -x, reflectivity) ' this corresponds to a 90 degree cw rotation around the y axis
   end if
 end sub
 

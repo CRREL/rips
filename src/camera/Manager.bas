@@ -1035,6 +1035,7 @@ Public Sub TransferImage(Handle, Camera, LocalImageFile, ServerImagePath)
                If WaitEvent(0, Shutdown) < 0 Then
                   ' Transfer the image from the Xpert to the FTP Server
                   StatusMsg "Manager: Uploading picture with FTP using PutImage"
+                  statusmsg "Manager: Putting " + localimagefile + " to " + destfile
                   If PutImage(Handle, LocalImageFile, DestFile) Then
                      StatusMsg "Manager: PutImage " & Camera & " worked (" & FtpAttempts & "/5)"
                      SentPicture = True
