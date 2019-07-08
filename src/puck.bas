@@ -144,12 +144,13 @@ sub puck_convert_measurement
         elevation = puck_elevation_angle(channel)
         range = bitconvert(mid(packet, offset + channel * 3, 2) + chr(0) + chr(0), 1) * 0.002
         reflectivity = bitconvert(mid(packet, offset + channel * 3 + 2, 1) + chr(0) + chr(0) + chr(0), 1)
-        call puck_write_point(outfile, azimuth, elevation, range, reflectivity)
+        call puck_write_point(outfile, azimuth, elevation, range, reflectivity, channel)
 
         azimuth = azimuths(data_block_number * 2 + 1)
+        elevation = puck_elevation_angle(channel)
         range = bitconvert(mid(packet, offset + 3 * NUM_CHANNELS + channel * 3, 2) + chr(0) + chr(0), 1) * 0.002
         reflectivity = bitconvert(mid(packet, offset + 3 * NUM_CHANNELS + channel * 3 + 2, 1) + chr(0) + chr(0) + chr(0), 1)
-        call puck_write_point(outfile, azimuth, elevation, range, reflectivity)
+        call puck_write_point(outfile, azimuth, elevation, range, reflectivity, channel)
       next
     next
   next
@@ -214,7 +215,7 @@ function puck_elevation_angle(channel)
   puck_elevation_angle = ELEVATION_ANGLES(channel)
 end function
 
-sub puck_write_point(outfile, azimuth, elevation, range, reflectivity)
+sub puck_write_point(outfile, azimuth, elevation, range, reflectivity, channel)
   if range = 0 then
     exit sub
   end if
@@ -229,7 +230,7 @@ sub puck_write_point(outfile, azimuth, elevation, range, reflectivity)
   if PUCK_BINARY then
     _ = writeb(outfile, bin(z, -4) + bin(y, -4) + bin(-x, -4) + bin(reflectivity, 1), 13)
   else
-    print outfile, format("%.3f,%.3f,%.3f,%d", z, y, -x, reflectivity) ' this corresponds to a 90 degree cw rotation around the y axis
+    print outfile, format("%.3f,%.3f,%.3f,%d,%d,%.3f,%.3f,%.3f", z, y, -x, reflectivity, channel) ' this corresponds to a 90 degree cw rotation around the y axis
   end if
 end sub
 
