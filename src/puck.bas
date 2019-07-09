@@ -23,7 +23,7 @@ const PI = 3.141592654
 const PUCK_BINARY = 0
 const PUCK_ARCHIVE_FOLDER = "\SD Card\RIPS"
 const SERVER_PUCK_IMAGE_PATH = "/StarDot/INGLEFIELD_RIPS/RIPS/"
-const MIN_RANGE = 5
+const MIN_RANGE = 7
 
 public declare sub transferimage(handle, camera, local, remote)
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
@@ -232,7 +232,7 @@ sub puck_write_point(outfile, azimuth, elevation, range, reflectivity, channel)
   if PUCK_BINARY then
     _ = writeb(outfile, bin(z, -4) + bin(y, -4) + bin(-x, -4) + bin(reflectivity, 1), 13)
   else
-    print outfile, format("%.3f,%.3f,%.3f,%d,%d,%.3f,%.3f,%.3f", z, y, -x, reflectivity) ' this corresponds to a 90 degree cw rotation around the y axis
+    print outfile, format("%.3f,%.3f,%.3f,%d", z, y, -x, reflectivity) ' this corresponds to a 90 degree cw rotation around the y axis
   end if
 end sub
 
