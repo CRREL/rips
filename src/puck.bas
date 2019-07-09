@@ -24,6 +24,8 @@ const PUCK_BINARY = 0
 const PUCK_ARCHIVE_FOLDER = "\SD Card\RIPS"
 const SERVER_PUCK_IMAGE_PATH = "/StarDot/INGLEFIELD_RIPS/RIPS/"
 const MIN_RANGE = 7
+const FIRST_MONTH = 4
+const LAST_MONTH = 10
 
 public declare sub transferimage(handle, camera, local, remote)
 public declare sub puck_server(socket, udp_buffer, client_ip, server_port, client_port)
@@ -62,6 +64,13 @@ function deg2rad(degrees)
 end function
 
 public sub sched_puck_measure
+  today = date
+  if month(today) > LAST_MONTH or month(today) < FIRST_MONTH then
+    statusmsg "[Puck] Winter hours, skipping scan"
+    exit sub
+  else
+    statusmsg "[Puck] Summer hours, continuing with scan"
+  end if
   call puck_take_measurement
   call puck_convert_measurement
   call puck_archive_converted_data
